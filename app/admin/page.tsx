@@ -13,6 +13,7 @@ interface UserRow {
   role: 'super-admin' | 'user';
   modules: string[];
   createdAt: string;
+  forcePasswordChange?: boolean;
 }
 
 export default function AdminPage() {
@@ -24,6 +25,9 @@ export default function AdminPage() {
   const [editRole, setEditRole] = useState<'super-admin' | 'user'>('user');
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [sendingCreds, setSendingCreds] = useState<string | null>(null);
+  const [togglingPw, setTogglingPw] = useState<string | null>(null);
+  const [actionMsg, setActionMsg] = useState<{ id: string; text: string; ok: boolean } | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -92,6 +96,50 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('Delete failed:', err);
+    }
+  }
+
+  async function toggleForcePassword(user: UserRow) {
+    setTogglingPw(user.id);
+    setActionMsg(null);
+    try {
+      const newVal = !user.forcePasswordChange;
+      const res = await authFetch(`/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ forcePasswordChange: newVal }),
+      });
+      if (res.ok) {
+        setActionMsg({ id: user.id, text: newVal ? 'Will force PW change' : 'PW change removed', ok: true });
+        await fetchUsers();
+      }
+    } catch (err) {
+      console.error('Toggle failed:', err);
+    } finally {
+      setTogglingPw(null);
+    }
+  }
+
+  async function sendCredentials(user: UserRow) {
+    setSendingCreds(user.id);
+    setActionMsg(null);
+    try {
+      const res = await authFetch(`/api/users/${user.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setActionMsg({ id: user.id, text: 'Credentials emailed!', ok: true });
+        await fetchUsers();
+      } else {
+        setActionMsg({ id: user.id, text: data.error || 'Failed', ok: false });
+      }
+    } catch (err) {
+      console.error('Send credentials failed:', err);
+      setActionMsg({ id: user.id, text: 'Network error', ok: false });
+    } finally {
+      setSendingCreds(null);
     }
   }
 
@@ -237,39 +285,70 @@ export default function AdminPage() {
                           </button>
                         </div>
                       ) : (
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => startEdit(user)}
-                            className="text-xs text-blue-600 hover:text-blue-800"
-                          >
-                            Edit
-                          </button>
+                        <div className="flex flex-col items-end gap-1.5">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => startEdit(user)}
+                              className="text-xs text-blue-600 hover:text-blue-800"
+                            >
+                              Edit
+                            </button>
+                            {user.id !== session.id && (
+                              <>
+                                {deleteConfirm === user.id ? (
+                                  <div className="flex gap-1">
+                                    <button
+                                      onClick={() => deleteUser(user.id)}
+                                      className="text-xs text-red-600 hover:text-red-800 font-medium"
+                                    >
+                                      Confirm
+                                    </button>
+                                    <button
+                                      onClick={() => setDeleteConfirm(null)}
+                                      className="text-xs text-gray-400 hover:text-gray-600"
+                                    >
+                                      No
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => setDeleteConfirm(user.id)}
+                                    className="text-xs text-red-500 hover:text-red-700"
+                                  >
+                                    Delete
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
                           {user.id !== session.id && (
-                            <>
-                              {deleteConfirm === user.id ? (
-                                <div className="flex gap-1">
-                                  <button
-                                    onClick={() => deleteUser(user.id)}
-                                    className="text-xs text-red-600 hover:text-red-800 font-medium"
-                                  >
-                                    Confirm
-                                  </button>
-                                  <button
-                                    onClick={() => setDeleteConfirm(null)}
-                                    className="text-xs text-gray-400 hover:text-gray-600"
-                                  >
-                                    No
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => setDeleteConfirm(user.id)}
-                                  className="text-xs text-red-500 hover:text-red-700"
-                                >
-                                  Delete
-                                </button>
-                              )}
-                            </>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => toggleForcePassword(user)}
+                                disabled={togglingPw === user.id}
+                                className={`text-xs px-2 py-0.5 rounded-full border transition-colors disabled:opacity-50 ${
+                                  user.forcePasswordChange
+                                    ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+                                    : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
+                                }`}
+                                title={user.forcePasswordChange ? 'Click to remove forced PW change' : 'Click to force PW change on next login'}
+                              >
+                                {togglingPw === user.id ? '...' : user.forcePasswordChange ? 'Force PW: ON' : 'Force PW'}
+                              </button>
+                              <button
+                                onClick={() => sendCredentials(user)}
+                                disabled={sendingCreds === user.id}
+                                className="text-xs px-2 py-0.5 rounded-full border bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                                title="Generate new temp password and email it to the user"
+                              >
+                                {sendingCreds === user.id ? 'Sending...' : 'Email Creds'}
+                              </button>
+                            </div>
+                          )}
+                          {actionMsg && actionMsg.id === user.id && (
+                            <span className={`text-xs ${actionMsg.ok ? 'text-green-600' : 'text-red-600'}`}>
+                              {actionMsg.text}
+                            </span>
                           )}
                         </div>
                       )}

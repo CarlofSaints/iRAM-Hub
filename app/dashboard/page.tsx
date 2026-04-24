@@ -19,9 +19,15 @@ export default function DashboardPage() {
   if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900 relative">
+      {/* Background */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+        style={{ backgroundImage: "url('/images/iram-background.png')" }}
+      />
+      <div className="relative z-10">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3">
+      <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
@@ -57,8 +63,8 @@ export default function DashboardPage() {
       {/* Content */}
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Welcome, {session.name}</h1>
-          <p className="text-sm text-gray-500 mt-1">Select a module to get started</p>
+          <h1 className="text-2xl font-bold text-white">Welcome, {session.name}</h1>
+          <p className="text-sm text-gray-300 mt-1">Select a module to get started</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -70,6 +76,7 @@ export default function DashboardPage() {
           })}
         </div>
       </main>
+      </div>
     </div>
   );
 }
