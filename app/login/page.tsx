@@ -79,7 +79,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Header */}
-        <div className="bg-[var(--color-primary)] rounded-t-xl px-8 py-6 text-white text-center">
+        <div className="bg-[var(--color-charcoal)] rounded-t-xl px-8 py-6 text-white text-center">
           <div className="flex justify-center mb-3">
             <Image
               src="/images/iram-hub-logo-dark.png"
