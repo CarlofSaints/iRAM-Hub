@@ -1,6 +1,6 @@
 'use client';
 
-import type { Module } from '@/lib/modules';
+import type { Module } from '@/lib/moduleData';
 import ModuleIcon from './ModuleIcon';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function ModuleTile({ module, hasAccess }: Props) {
-  const comingSoon = !module.url;
+  const comingSoon = module.comingSoon;
   const locked = !hasAccess;
 
   return (

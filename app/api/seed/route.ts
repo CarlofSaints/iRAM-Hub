@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { loadUsers, saveUsers, HubUser } from '@/lib/userData';
-import { MODULES } from '@/lib/modules';
+import { loadModules, saveModules, DEFAULT_MODULES } from '@/lib/moduleData';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,8 +12,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid secret' }, { status: 403 });
   }
 
+  // --- Seed modules ---
+  let modulesSeeded = 0;
+  const existingModules = await loadModules();
+  if (existingModules.length === 0) {
+    await saveModules(DEFAULT_MODULES);
+    modulesSeeded = DEFAULT_MODULES.length;
+  }
+
+  // --- Seed users ---
   const now = new Date().toISOString();
-  const allModuleSlugs = MODULES.map(m => m.slug);
+  const modules = existingModules.length > 0 ? existingModules : DEFAULT_MODULES;
+  const allModuleSlugs = modules.map(m => m.slug);
 
   const users = await loadUsers();
 
@@ -47,5 +57,7 @@ export async function POST(req: NextRequest) {
     ok: true,
     usersAdded,
     totalUsers: users.length,
+    modulesSeeded,
+    totalModules: modules.length,
   });
 }

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, authFetch } from '@/lib/useAuth';
-import { MODULES } from '@/lib/modules';
+import type { Module } from '@/lib/moduleData';
 import Image from 'next/image';
 
 export default function NewUserPage() {
@@ -17,6 +17,14 @@ export default function NewUserPage() {
   const [modules, setModules] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [allModules, setAllModules] = useState<Module[]>([]);
+
+  useEffect(() => {
+    fetch('/api/modules', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => setAllModules(data))
+      .catch(err => console.error('Failed to load modules:', err));
+  }, []);
 
   if (authLoading || !session) {
     return (
@@ -33,7 +41,7 @@ export default function NewUserPage() {
   }
 
   function selectAll() {
-    setModules(MODULES.map(m => m.slug));
+    setModules(allModules.map(m => m.slug));
   }
 
   function selectNone() {
@@ -163,7 +171,7 @@ export default function NewUserPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {MODULES.map(m => (
+              {allModules.map(m => (
                 <button
                   key={m.slug}
                   type="button"

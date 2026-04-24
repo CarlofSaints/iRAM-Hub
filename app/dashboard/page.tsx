@@ -1,12 +1,23 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
-import { MODULES } from '@/lib/modules';
+import type { Module } from '@/lib/moduleData';
 import ModuleTile from '@/components/ModuleTile';
 import Image from 'next/image';
 
 export default function DashboardPage() {
   const { session, loading, logout } = useAuth();
+  const [modules, setModules] = useState<Module[]>([]);
+  const [modulesLoading, setModulesLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/modules', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => setModules(data))
+      .catch(err => console.error('Failed to load modules:', err))
+      .finally(() => setModulesLoading(false));
+  }, []);
 
   if (loading) {
     return (
@@ -67,14 +78,18 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-300 mt-1">Select a module to get started</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {MODULES.map(m => {
-            const hasAccess = session.role === 'super-admin' || session.modules.includes(m.slug);
-            return (
-              <ModuleTile key={m.slug} module={m} hasAccess={hasAccess} />
-            );
-          })}
-        </div>
+        {modulesLoading ? (
+          <div className="text-gray-400 text-sm text-center py-12">Loading modules...</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {modules.map(m => {
+              const hasAccess = session.role === 'super-admin' || session.modules.includes(m.slug);
+              return (
+                <ModuleTile key={m.slug} module={m} hasAccess={hasAccess} />
+              );
+            })}
+          </div>
+        )}
       </main>
       </div>
     </div>

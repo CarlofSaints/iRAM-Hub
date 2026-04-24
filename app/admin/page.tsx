@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth, authFetch } from '@/lib/useAuth';
-import { MODULES } from '@/lib/modules';
+import type { Module } from '@/lib/moduleData';
 import Image from 'next/image';
 
 interface UserRow {
@@ -28,6 +28,7 @@ export default function AdminPage() {
   const [sendingCreds, setSendingCreds] = useState<string | null>(null);
   const [togglingPw, setTogglingPw] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState<{ id: string; text: string; ok: boolean } | null>(null);
+  const [allModules, setAllModules] = useState<Module[]>([]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -41,6 +42,13 @@ export default function AdminPage() {
     } finally {
       setLoadingUsers(false);
     }
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/modules', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => setAllModules(data))
+      .catch(err => console.error('Failed to load modules:', err));
   }, []);
 
   useEffect(() => {
@@ -164,6 +172,12 @@ export default function AdminPage() {
             >
               Dashboard
             </a>
+            <a
+              href="/admin/modules"
+              className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors font-medium"
+            >
+              Modules
+            </a>
             <button
               onClick={logout}
               className="text-sm text-gray-400 hover:text-red-500 transition-colors"
@@ -234,7 +248,7 @@ export default function AdminPage() {
                     <td className="px-4 py-3">
                       {editingId === user.id ? (
                         <div className="flex flex-wrap gap-1.5">
-                          {MODULES.map(m => (
+                          {allModules.map(m => (
                             <button
                               key={m.slug}
                               onClick={() => toggleModule(m.slug)}
@@ -251,7 +265,7 @@ export default function AdminPage() {
                       ) : (
                         <div className="flex flex-wrap gap-1">
                           {user.modules.map(slug => {
-                            const mod = MODULES.find(m => m.slug === slug);
+                            const mod = allModules.find(m => m.slug === slug);
                             return (
                               <span
                                 key={slug}
@@ -360,8 +374,6 @@ export default function AdminPage() {
           </div>
         )}
       </main>
-
-      {/* Delete confirmation overlay (mobile-friendly) */}
     </div>
   );
 }
