@@ -4,15 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth, authFetch } from '@/lib/useAuth';
 import type { Module } from '@/lib/moduleData';
 import Image from 'next/image';
-
-const ICON_OPTIONS = [
-  { value: '', label: 'Default (generic)' },
-  { value: 'callcycle', label: 'Calendar' },
-  { value: 'rvl', label: 'Box / Logistics' },
-  { value: 'phantom', label: 'Ghost' },
-  { value: 'dispo', label: 'Broom / Cleaner' },
-  { value: 'pnp-oos', label: 'Shopping Cart' },
-];
+import { ICON_CATALOG } from '@/components/ModuleIcon';
 
 const emptyForm = (): Omit<Module, 'slug'> & { slug: string } => ({
   slug: '',
@@ -275,9 +267,19 @@ export default function ModulesAdminPage() {
                   onChange={e => setAddForm({ ...addForm, icon: e.target.value })}
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                 >
-                  {ICON_OPTIONS.map(o => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
+                  <option value="">Default (generic)</option>
+                    {Object.entries(
+                      ICON_CATALOG.reduce<Record<string, typeof ICON_CATALOG>>((acc, item) => {
+                        (acc[item.category] = acc[item.category] || []).push(item);
+                        return acc;
+                      }, {})
+                    ).map(([cat, items]) => (
+                      <optgroup key={cat} label={cat}>
+                        {items.map(o => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </optgroup>
+                    ))}
                 </select>
               </div>
               <div className="flex flex-col gap-1">
@@ -382,8 +384,18 @@ export default function ModulesAdminPage() {
                             onChange={e => setEditForm({ ...editForm, icon: e.target.value })}
                             className="border border-gray-300 rounded px-1 py-1 text-xs"
                           >
-                            {ICON_OPTIONS.map(o => (
-                              <option key={o.value} value={o.value}>{o.label}</option>
+                            <option value="">Default (generic)</option>
+                            {Object.entries(
+                              ICON_CATALOG.reduce<Record<string, typeof ICON_CATALOG>>((acc, item) => {
+                                (acc[item.category] = acc[item.category] || []).push(item);
+                                return acc;
+                              }, {})
+                            ).map(([cat, items]) => (
+                              <optgroup key={cat} label={cat}>
+                                {items.map(o => (
+                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                              </optgroup>
                             ))}
                           </select>
                         </td>

@@ -22,7 +22,7 @@ export default function ModuleTile({ module, hasAccess }: Props) {
     >
       <div className="p-6 flex-1 flex flex-col">
         <div className="flex items-start gap-3 mb-3">
-          <ModuleIcon slug={module.slug} locked={locked} />
+          <ModuleIcon icon={module.icon || module.slug} locked={locked} />
           <div className="flex-1 min-w-0">
             <h3 className={`font-bold text-lg leading-tight ${locked ? 'text-gray-400' : 'text-gray-900'}`}>
               {module.name}
