@@ -43,6 +43,10 @@ export async function PUT(
   if (body.forcePasswordChange !== undefined) {
     user.forcePasswordChange = !!body.forcePasswordChange;
   }
+  if (body.password !== undefined && body.password.trim().length >= 4) {
+    user.passwordHash = await bcrypt.hash(body.password.trim(), 10);
+    user.forcePasswordChange = true;
+  }
 
   user.updatedAt = new Date().toISOString();
   users[idx] = user;

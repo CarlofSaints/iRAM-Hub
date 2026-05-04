@@ -29,6 +29,9 @@ export default function AdminPage() {
   const [togglingPw, setTogglingPw] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState<{ id: string; text: string; ok: boolean } | null>(null);
   const [allModules, setAllModules] = useState<Module[]>([]);
+  const [resetPwId, setResetPwId] = useState<string | null>(null);
+  const [resetPwValue, setResetPwValue] = useState('');
+  const [resettingPw, setResettingPw] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -148,6 +151,35 @@ export default function AdminPage() {
       setActionMsg({ id: user.id, text: 'Network error', ok: false });
     } finally {
       setSendingCreds(null);
+    }
+  }
+
+  async function resetPassword(userId: string) {
+    if (!resetPwValue.trim() || resetPwValue.trim().length < 4) {
+      setActionMsg({ id: userId, text: 'Min 4 characters', ok: false });
+      return;
+    }
+    setResettingPw(true);
+    setActionMsg(null);
+    try {
+      const res = await authFetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: resetPwValue.trim() }),
+      });
+      if (res.ok) {
+        setActionMsg({ id: userId, text: 'Password reset!', ok: true });
+        setResetPwId(null);
+        setResetPwValue('');
+        await fetchUsers();
+      } else {
+        const data = await res.json();
+        setActionMsg({ id: userId, text: data.error || 'Failed', ok: false });
+      }
+    } catch {
+      setActionMsg({ id: userId, text: 'Network error', ok: false });
+    } finally {
+      setResettingPw(false);
     }
   }
 
@@ -357,7 +389,40 @@ export default function AdminPage() {
                               >
                                 {sendingCreds === user.id ? 'Sending...' : 'Email Creds'}
                               </button>
+                              <button
+                                onClick={() => { setResetPwId(resetPwId === user.id ? null : user.id); setResetPwValue(''); setActionMsg(null); }}
+                                className="text-xs px-2 py-0.5 rounded-full border bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 transition-colors"
+                                title="Set a custom password for this user"
+                              >
+                                Reset PW
+                              </button>
                             </div>
+                            {resetPwId === user.id && (
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <input
+                                  type="text"
+                                  value={resetPwValue}
+                                  onChange={e => setResetPwValue(e.target.value)}
+                                  placeholder="New password"
+                                  className="border border-gray-300 rounded px-2 py-0.5 text-xs w-28"
+                                  autoFocus
+                                  onKeyDown={e => { if (e.key === 'Enter') resetPassword(user.id); }}
+                                />
+                                <button
+                                  onClick={() => resetPassword(user.id)}
+                                  disabled={resettingPw}
+                                  className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded hover:bg-orange-600 disabled:opacity-50"
+                                >
+                                  {resettingPw ? '...' : 'Set'}
+                                </button>
+                                <button
+                                  onClick={() => { setResetPwId(null); setResetPwValue(''); }}
+                                  className="text-xs text-gray-400 hover:text-gray-600"
+                                >
+                                  X
+                                </button>
+                              </div>
+                            )
                           )}
                           {actionMsg && actionMsg.id === user.id && (
                             <span className={`text-xs ${actionMsg.ok ? 'text-green-600' : 'text-red-600'}`}>
