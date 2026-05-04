@@ -368,61 +368,63 @@ export default function AdminPage() {
                             )}
                           </div>
                           {user.id !== session.id && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => toggleForcePassword(user)}
-                                disabled={togglingPw === user.id}
-                                className={`text-xs px-2 py-0.5 rounded-full border transition-colors disabled:opacity-50 ${
-                                  user.forcePasswordChange
-                                    ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
-                                    : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
-                                }`}
-                                title={user.forcePasswordChange ? 'Click to remove forced PW change' : 'Click to force PW change on next login'}
-                              >
-                                {togglingPw === user.id ? '...' : user.forcePasswordChange ? 'Force PW: ON' : 'Force PW'}
-                              </button>
-                              <button
-                                onClick={() => sendCredentials(user)}
-                                disabled={sendingCreds === user.id}
-                                className="text-xs px-2 py-0.5 rounded-full border bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors disabled:opacity-50"
-                                title="Generate new temp password and email it to the user"
-                              >
-                                {sendingCreds === user.id ? 'Sending...' : 'Email Creds'}
-                              </button>
-                              <button
-                                onClick={() => { setResetPwId(resetPwId === user.id ? null : user.id); setResetPwValue(''); setActionMsg(null); }}
-                                className="text-xs px-2 py-0.5 rounded-full border bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 transition-colors"
-                                title="Set a custom password for this user"
-                              >
-                                Reset PW
-                              </button>
-                            </div>
-                            {resetPwId === user.id && (
-                              <div className="flex items-center gap-1.5 mt-1">
-                                <input
-                                  type="text"
-                                  value={resetPwValue}
-                                  onChange={e => setResetPwValue(e.target.value)}
-                                  placeholder="New password"
-                                  className="border border-gray-300 rounded px-2 py-0.5 text-xs w-28"
-                                  autoFocus
-                                  onKeyDown={e => { if (e.key === 'Enter') resetPassword(user.id); }}
-                                />
+                            <>
+                              <div className="flex gap-2">
                                 <button
-                                  onClick={() => resetPassword(user.id)}
-                                  disabled={resettingPw}
-                                  className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded hover:bg-orange-600 disabled:opacity-50"
+                                  onClick={() => toggleForcePassword(user)}
+                                  disabled={togglingPw === user.id}
+                                  className={`text-xs px-2 py-0.5 rounded-full border transition-colors disabled:opacity-50 ${
+                                    user.forcePasswordChange
+                                      ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+                                      : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
+                                  }`}
+                                  title={user.forcePasswordChange ? 'Click to remove forced PW change' : 'Click to force PW change on next login'}
                                 >
-                                  {resettingPw ? '...' : 'Set'}
+                                  {togglingPw === user.id ? '...' : user.forcePasswordChange ? 'Force PW: ON' : 'Force PW'}
                                 </button>
                                 <button
-                                  onClick={() => { setResetPwId(null); setResetPwValue(''); }}
-                                  className="text-xs text-gray-400 hover:text-gray-600"
+                                  onClick={() => sendCredentials(user)}
+                                  disabled={sendingCreds === user.id}
+                                  className="text-xs px-2 py-0.5 rounded-full border bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                                  title="Generate new temp password and email it to the user"
                                 >
-                                  X
+                                  {sendingCreds === user.id ? 'Sending...' : 'Email Creds'}
+                                </button>
+                                <button
+                                  onClick={() => { setResetPwId(resetPwId === user.id ? null : user.id); setResetPwValue(''); setActionMsg(null); }}
+                                  className="text-xs px-2 py-0.5 rounded-full border bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 transition-colors"
+                                  title="Set a custom password for this user"
+                                >
+                                  Reset PW
                                 </button>
                               </div>
-                            )
+                              {resetPwId === user.id && (
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <input
+                                    type="text"
+                                    value={resetPwValue}
+                                    onChange={e => setResetPwValue(e.target.value)}
+                                    placeholder="New password"
+                                    className="border border-gray-300 rounded px-2 py-0.5 text-xs w-28"
+                                    autoFocus
+                                    onKeyDown={e => { if (e.key === 'Enter') resetPassword(user.id); }}
+                                  />
+                                  <button
+                                    onClick={() => resetPassword(user.id)}
+                                    disabled={resettingPw}
+                                    className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded hover:bg-orange-600 disabled:opacity-50"
+                                  >
+                                    {resettingPw ? '...' : 'Set'}
+                                  </button>
+                                  <button
+                                    onClick={() => { setResetPwId(null); setResetPwValue(''); }}
+                                    className="text-xs text-gray-400 hover:text-gray-600"
+                                  >
+                                    X
+                                  </button>
+                                </div>
+                              )}
+                            </>
                           )}
                           {actionMsg && actionMsg.id === user.id && (
                             <span className={`text-xs ${actionMsg.ok ? 'text-green-600' : 'text-red-600'}`}>
