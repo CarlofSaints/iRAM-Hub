@@ -137,4 +137,15 @@ export const DEFAULT_MODULES: Module[] = [
     order: 6,
     comingSoon: true,
   },
+  {
+    slug: 'ghost-stock',
+    name: 'Ghost Stock',
+    description: 'OLAP cube processor for ghost stock analysis',
+    url: 'https://exceler8xl.sharepoint.com/Tools%20%20Software/Forms/AllItems.aspx?id=%2FTools%20%20Software%2FGHOST&viewid=2047d063%2Dbe8d%2D4fca%2D8d66%2D68ad717c6f26',
+    color: '#7CC042',
+    icon: 'ghost',
+    order: 7,
+    comingSoon: false,
+    ssoEnabled: false,
+  },
 ];

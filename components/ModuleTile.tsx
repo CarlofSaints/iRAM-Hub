@@ -17,6 +17,13 @@ export default function ModuleTile({ module, hasAccess }: Props) {
 
   async function handleOpen() {
     if (opening || !module.url) return;
+
+    // Non-SSO modules: open the URL directly (e.g. SharePoint links, external tools)
+    if (!module.ssoEnabled) {
+      window.open(module.url, '_blank');
+      return;
+    }
+
     setOpening(true);
     try {
       const res = await authFetch('/api/sso/token', {
