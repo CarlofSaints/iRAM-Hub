@@ -1,11 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import { authFetch } from '@/lib/useAuth';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
+  const moduleSlug = searchParams.get('module');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -17,6 +22,61 @@ export default function LoginPage() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotError, setForgotError] = useState('');
+
+  // Auto-redirect: if already logged in and redirect param present, generate token and redirect
+  useEffect(() => {
+    if (!redirectUrl || !moduleSlug) return;
+    const raw = localStorage.getItem('hub_session');
+    if (!raw) return;
+    try {
+      const session = JSON.parse(raw);
+      if (!session?.id) return;
+
+      // Already logged in — generate SSO token and redirect back
+      (async () => {
+        setLoading(true);
+        try {
+          const res = await authFetch('/api/sso/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ module: moduleSlug }),
+          });
+          if (res.ok) {
+            const { token } = await res.json();
+            const sep = redirectUrl.includes('?') ? '&' : '?';
+            window.location.href = `${redirectUrl}${sep}token=${token}`;
+            return;
+          }
+        } catch { /* fall through to show login form */ }
+        setLoading(false);
+      })();
+    } catch { /* ignore parse errors */ }
+  }, [redirectUrl, moduleSlug]);
+
+  async function handleSSORedirect(sessionData: { id: string; modules: string[] }) {
+    if (!redirectUrl || !moduleSlug) return false;
+
+    // Store session first so authFetch can read it
+    try {
+      const res = await authFetch('/api/sso/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ module: moduleSlug }),
+      });
+      if (res.ok) {
+        const { token } = await res.json();
+        const sep = redirectUrl.includes('?') ? '&' : '?';
+        window.location.href = `${redirectUrl}${sep}token=${token}`;
+        return true;
+      }
+      const data = await res.json().catch(() => ({ error: 'SSO token failed' }));
+      setError(data.error || 'Failed to generate SSO token');
+      return true; // Handled (with error), don't navigate to dashboard
+    } catch {
+      setError('Failed to generate SSO token');
+      return true;
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,9 +102,16 @@ export default function LoginPage() {
 
       if (data.forcePasswordChange) {
         router.push('/change-password');
-      } else {
-        router.push('/dashboard');
+        return;
       }
+
+      // If this login was triggered by an SSO redirect, generate token and redirect back
+      if (redirectUrl && moduleSlug) {
+        const handled = await handleSSORedirect(data);
+        if (handled) return;
+      }
+
+      router.push('/dashboard');
     } catch {
       setError('Network error. Please try again.');
     } finally {
@@ -97,6 +164,12 @@ export default function LoginPage() {
           onSubmit={handleSubmit}
           className="bg-white rounded-b-xl shadow-lg px-8 py-8 flex flex-col gap-5"
         >
+          {redirectUrl && moduleSlug && (
+            <div className="bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-lg px-3 py-2 text-center">
+              Sign in to continue to your app
+            </div>
+          )}
+
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Email</label>
             <input

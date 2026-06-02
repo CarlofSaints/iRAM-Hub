@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import type { Module } from '@/lib/moduleData';
+import { authFetch } from '@/lib/useAuth';
 import ModuleIcon from './ModuleIcon';
 
 interface Props {
@@ -11,6 +13,32 @@ interface Props {
 export default function ModuleTile({ module, hasAccess }: Props) {
   const comingSoon = module.comingSoon;
   const locked = !hasAccess;
+  const [opening, setOpening] = useState(false);
+
+  async function handleOpen() {
+    if (opening || !module.url) return;
+    setOpening(true);
+    try {
+      const res = await authFetch('/api/sso/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ module: module.slug }),
+      });
+      if (!res.ok) {
+        // Fallback: open without token
+        window.open(module.url, '_blank');
+        return;
+      }
+      const { token } = await res.json();
+      const sep = module.url.includes('?') ? '&' : '?';
+      window.open(`${module.url}/sso/callback${sep}token=${token}`, '_blank');
+    } catch {
+      // Fallback: open without token
+      window.open(module.url, '_blank');
+    } finally {
+      setOpening(false);
+    }
+  }
 
   return (
     <div
@@ -62,11 +90,12 @@ export default function ModuleTile({ module, hasAccess }: Props) {
           </button>
         ) : (
           <button
-            onClick={() => window.open(module.url, '_blank')}
-            className="w-full py-2.5 rounded-lg text-sm font-bold text-white transition-colors hover:brightness-110"
+            onClick={handleOpen}
+            disabled={opening}
+            className="w-full py-2.5 rounded-lg text-sm font-bold text-white transition-colors hover:brightness-110 disabled:opacity-60"
             style={{ backgroundColor: module.color }}
           >
-            Open
+            {opening ? 'Opening...' : 'Open'}
           </button>
         )}
       </div>
