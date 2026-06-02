@@ -202,7 +202,7 @@ export default function AdminPage() {
               href="/dashboard"
               className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors font-medium"
             >
-              Dashboard
+              Hub Home
             </a>
             <a
               href="/admin/modules"

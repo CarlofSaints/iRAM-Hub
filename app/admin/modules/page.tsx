@@ -160,7 +160,7 @@ export default function ModulesAdminPage() {
               href="/dashboard"
               className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors font-medium"
             >
-              Dashboard
+              Hub Home
             </a>
             <a
               href="/admin"
@@ -182,7 +182,7 @@ export default function ModulesAdminPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Module Management</h1>
-            <p className="text-sm text-gray-500 mt-1">Add, edit and remove dashboard modules</p>
+            <p className="text-sm text-gray-500 mt-1">Add, edit and remove Hub modules</p>
           </div>
           {!adding && (
             <button

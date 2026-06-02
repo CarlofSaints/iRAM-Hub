@@ -86,7 +86,7 @@ export default function ModuleTile({ module, hasAccess }: Props) {
             disabled
             className="w-full py-2.5 rounded-lg text-sm font-bold bg-gray-200 text-gray-400 cursor-not-allowed"
           >
-            Locked
+            Requires Access
           </button>
         ) : (
           <button
