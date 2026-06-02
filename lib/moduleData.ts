@@ -141,7 +141,7 @@ export const DEFAULT_MODULES: Module[] = [
     slug: 'ghost-stock',
     name: 'Ghost Stock',
     description: 'OLAP cube processor for ghost stock analysis',
-    url: 'https://exceler8xl.sharepoint.com/Tools%20%20Software/Forms/AllItems.aspx?id=%2FTools%20%20Software%2FGHOST&viewid=2047d063%2Dbe8d%2D4fca%2D8d66%2D68ad717c6f26',
+    url: 'https://exceler8xl.sharepoint.com/:u:/r/Tools%20%20Software/GHOST/GHOST.bat?csf=1&web=1&e=8yIamw',
     color: '#7CC042',
     icon: 'ghost',
     order: 7,
