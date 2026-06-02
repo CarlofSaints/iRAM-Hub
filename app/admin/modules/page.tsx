@@ -15,6 +15,7 @@ const emptyForm = (): Omit<Module, 'slug'> & { slug: string } => ({
   icon: '',
   order: 0,
   comingSoon: false,
+  ssoEnabled: false,
 });
 
 export default function ModulesAdminPage() {
@@ -291,7 +292,7 @@ export default function ModulesAdminPage() {
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                 />
               </div>
-              <div className="flex items-center gap-2 sm:col-span-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="add-coming-soon"
@@ -300,6 +301,19 @@ export default function ModulesAdminPage() {
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="add-coming-soon" className="text-sm text-gray-700">Coming Soon</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="add-sso-enabled"
+                  checked={addForm.ssoEnabled || false}
+                  onChange={e => setAddForm({ ...addForm, ssoEnabled: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="add-sso-enabled" className="text-sm text-gray-700">
+                  SSO Enabled
+                  <span className="text-xs text-gray-400 ml-1">(app uses slug &quot;{addForm.slug || '...'}&quot; for login)</span>
+                </label>
               </div>
             </div>
             <div className="flex gap-3">
@@ -338,6 +352,7 @@ export default function ModulesAdminPage() {
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 w-16">Icon</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 w-16">Color</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 w-20">Status</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600 w-16">SSO</th>
                   <th className="text-right px-4 py-3 font-semibold text-gray-600">Actions</th>
                 </tr>
               </thead>
@@ -369,7 +384,17 @@ export default function ModulesAdminPage() {
                             placeholder="Description"
                           />
                         </td>
-                        <td className="px-4 py-3 text-gray-400 text-xs">{mod.slug}</td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="text"
+                            value={editForm.slug}
+                            onChange={e => setEditForm({ ...editForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-xs font-mono"
+                          />
+                          {editForm.slug !== mod.slug && (
+                            <div className="text-[10px] text-amber-600 mt-0.5">was: {mod.slug}</div>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           <input
                             type="text"
@@ -418,6 +443,17 @@ export default function ModulesAdminPage() {
                             <span className="text-xs">Soon</span>
                           </label>
                         </td>
+                        <td className="px-4 py-3">
+                          <label className="flex items-center gap-1">
+                            <input
+                              type="checkbox"
+                              checked={editForm.ssoEnabled || false}
+                              onChange={e => setEditForm({ ...editForm, ssoEnabled: e.target.checked })}
+                              className="rounded border-gray-300"
+                            />
+                            <span className="text-xs">SSO</span>
+                          </label>
+                        </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-2">
                             <button onClick={cancelEdit} className="text-xs text-gray-500 hover:text-gray-700">Cancel</button>
@@ -460,6 +496,15 @@ export default function ModulesAdminPage() {
                             <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
                               Live
                             </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {mod.ssoEnabled ? (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700" title={`App checks for slug "${mod.slug}"`}>
+                              SSO
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-300">--</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">

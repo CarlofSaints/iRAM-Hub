@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireLogin } from '@/lib/requireLogin';
 import { createSSOToken } from '@/lib/sso';
+import { loadModules } from '@/lib/moduleData';
 
 export async function POST(req: NextRequest) {
   const userOrRes = await requireLogin(req);
@@ -28,6 +29,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Super-admins get all registered module slugs in the token
+  let tokenModules = user.modules;
+  if (user.role === 'super-admin') {
+    const allModules = await loadModules();
+    tokenModules = allModules.map(m => m.slug);
+  }
+
   const token = createSSOToken(
     {
       sub: user.id,
@@ -35,7 +43,7 @@ export async function POST(req: NextRequest) {
       name: user.name,
       surname: user.surname,
       hubRole: user.role,
-      modules: user.modules,
+      modules: tokenModules,
     },
     secret,
   );

@@ -11,6 +11,7 @@ export interface Module {
   icon: string;
   order: number;
   comingSoon: boolean;
+  ssoEnabled?: boolean;
 }
 
 const BLOB_KEY = 'modules.json';
@@ -81,6 +82,7 @@ export const DEFAULT_MODULES: Module[] = [
     icon: 'callcycle',
     order: 1,
     comingSoon: false,
+    ssoEnabled: true,
   },
   {
     slug: 'rvl',
@@ -91,6 +93,7 @@ export const DEFAULT_MODULES: Module[] = [
     icon: 'rvl',
     order: 2,
     comingSoon: false,
+    ssoEnabled: true,
   },
   {
     slug: 'phantom',
@@ -111,6 +114,18 @@ export const DEFAULT_MODULES: Module[] = [
     icon: 'dispo',
     order: 4,
     comingSoon: false,
+    ssoEnabled: true,
+  },
+  {
+    slug: 'ppt',
+    name: 'PPT Builder',
+    description: 'Generate PowerPoint reports from Perigee task exports',
+    url: 'https://i-ram-ppt-builder.vercel.app',
+    color: '#7CC042',
+    icon: 'ppt',
+    order: 5,
+    comingSoon: false,
+    ssoEnabled: true,
   },
   {
     slug: 'pnp-oos',
@@ -119,7 +134,7 @@ export const DEFAULT_MODULES: Module[] = [
     url: '',
     color: '#7CC042',
     icon: 'pnp-oos',
-    order: 5,
+    order: 6,
     comingSoon: true,
   },
 ];

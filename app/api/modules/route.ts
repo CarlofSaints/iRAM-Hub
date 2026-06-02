@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   const body = await req.json();
-  const { slug, name, description, url, color, icon, order, comingSoon } = body;
+  const { slug, name, description, url, color, icon, order, comingSoon, ssoEnabled } = body;
 
   if (!slug || !name) {
     return NextResponse.json({ error: 'slug and name are required' }, { status: 400 });
@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     icon: String(icon || ''),
     order: typeof order === 'number' ? order : modules.length + 1,
     comingSoon: Boolean(comingSoon),
+    ssoEnabled: Boolean(ssoEnabled),
   };
 
   modules.push(newModule);
