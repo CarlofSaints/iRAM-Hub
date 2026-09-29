@@ -38,6 +38,34 @@ export function useAuth(requiredRole?: 'super-admin') {
         return;
       }
       setSession(s);
+
+      // The saved copy is from sign-in. Refresh it so module access granted
+      // (or removed) since then applies without signing out and back in.
+      authFetch('/api/auth', { cache: 'no-store' })
+        .then(async res => {
+          if (res.status === 401) {
+            // User no longer exists
+            localStorage.removeItem(SESSION_KEY);
+            router.replace('/login');
+            return;
+          }
+          if (!res.ok) return; // keep the saved copy on a transient failure
+          const fresh = (await res.json()) as Session;
+          const next = updateSession({
+            name: fresh.name,
+            surname: fresh.surname,
+            email: fresh.email,
+            role: fresh.role,
+            modules: fresh.modules,
+          });
+          if (!next) return;
+          if (requiredRole && next.role !== requiredRole) {
+            router.replace('/dashboard');
+            return;
+          }
+          setSession(next);
+        })
+        .catch(() => { /* offline: keep the saved copy */ });
     } catch {
       localStorage.removeItem(SESSION_KEY);
       router.replace('/login');
