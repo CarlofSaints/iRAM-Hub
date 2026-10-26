@@ -13,6 +13,7 @@ export interface HubUser {
   createdAt: string;
   updatedAt: string;
   forcePasswordChange?: boolean;
+  passwordVersion?: number; // bumped on every password change; signs out older sessions
 }
 
 const BLOB_KEY = 'users.json';
@@ -47,6 +48,14 @@ export async function loadUsers(): Promise<HubUser[]> {
 export async function saveUsers(users: HubUser[]): Promise<void> {
   const json = JSON.stringify(users, null, 2);
 
+  // Local dev: the local file only (loading reads it too); no Blob token here.
+  if (!process.env.VERCEL) {
+    const localFile = path.join(process.cwd(), 'data', 'users.json');
+    fs.mkdirSync(path.dirname(localFile), { recursive: true });
+    fs.writeFileSync(localFile, json);
+    return;
+  }
+
   try {
     await put(BLOB_KEY, json, {
       access: 'private',
@@ -59,13 +68,4 @@ export async function saveUsers(users: HubUser[]): Promise<void> {
     throw new Error(`Failed to persist users to Vercel Blob: ${msg}`);
   }
 
-  // Local dev: also write to local file
-  try {
-    const localFile = path.join(process.cwd(), 'data', 'users.json');
-    const dir = path.dirname(localFile);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(localFile, json);
-  } catch {
-    // Vercel read-only FS — expected
-  }
 }

@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { loadUsers, saveUsers } from '@/lib/userData';
+import { makeTempPassword } from '@/lib/session';
 import { sendPasswordResetEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
-function generateTempPassword(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-  let pw = '';
-  for (let i = 0; i < 10; i++) {
-    pw += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return pw;
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,10 +23,11 @@ export async function POST(req: NextRequest) {
     }
 
     const user = users[idx];
-    const tempPassword = generateTempPassword();
+    const tempPassword = makeTempPassword();
 
     users[idx].passwordHash = await bcrypt.hash(tempPassword, 10);
     users[idx].forcePasswordChange = true;
+    users[idx].passwordVersion = (users[idx].passwordVersion ?? 0) + 1;
     users[idx].updatedAt = new Date().toISOString();
     await saveUsers(users);
 

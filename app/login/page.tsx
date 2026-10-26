@@ -47,12 +47,10 @@ function LoginForm() {
           const res = await authFetch('/api/sso/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ module: moduleSlug }),
+            body: JSON.stringify({ module: moduleSlug, redirect: redirectUrl }),
           });
           if (res.ok) {
-            const { token } = await res.json();
-            const sep = redirectUrl.includes('?') ? '&' : '?';
-            window.location.href = `${redirectUrl}${sep}token=${token}`;
+            window.location.href = (await res.json()).url;
             return;
           }
         } catch { /* fall through to show login form */ }
@@ -69,12 +67,10 @@ function LoginForm() {
       const res = await authFetch('/api/sso/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ module: moduleSlug }),
+        body: JSON.stringify({ module: moduleSlug, redirect: redirectUrl }),
       });
       if (res.ok) {
-        const { token } = await res.json();
-        const sep = redirectUrl.includes('?') ? '&' : '?';
-        window.location.href = `${redirectUrl}${sep}token=${token}`;
+        window.location.href = (await res.json()).url;
         return true;
       }
       const data = await res.json().catch(() => ({ error: 'SSO token failed' }));

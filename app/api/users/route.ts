@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { loadUsers, saveUsers, HubUser } from '@/lib/userData';
+import { makeTempPassword } from '@/lib/session';
 import { requireLogin } from '@/lib/requireLogin';
 import { sendNewUserEmail } from '@/lib/email';
 
@@ -20,14 +21,6 @@ export async function GET(req: NextRequest) {
   });
 }
 
-function generateTempPassword(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-  let pw = '';
-  for (let i = 0; i < 10; i++) {
-    pw += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return pw;
-}
 
 export async function POST(req: NextRequest) {
   const check = await requireLogin(req, 'super-admin');
@@ -45,7 +38,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'A user with that email already exists' }, { status: 409 });
   }
 
-  const tempPassword = generateTempPassword();
+  const tempPassword = makeTempPassword();
   const now = new Date().toISOString();
 
   const newUser: HubUser = {
