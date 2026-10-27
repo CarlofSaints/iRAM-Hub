@@ -1,45 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import { loadUsers, saveUsers } from '@/lib/userData';
-import { makeTempPassword } from '@/lib/session';
-import { sendPasswordResetEmail } from '@/lib/email';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { loadUsers } from '@/lib/userData';
+import { createResetToken } from '@/lib/resetTokens';
+import { sendPasswordResetLinkEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
+// The link's base is fixed, never the request's Host header (which a caller controls).
+const HUB_URL = (process.env.HUB_URL || 'https://iram-hub.vercel.app').replace(/\/+$/, '');
 
+/**
+ * Emails a one-time reset link. Changes nothing about the account: the password only
+ * changes when the link is used (/api/auth/reset-password). Answers at once, the same
+ * way for every email, and does the lookup and email afterwards, so neither the reply
+ * nor its timing tells a caller whether the email has an account.
+ */
 export async function POST(req: NextRequest) {
-  try {
-    const { email } = await req.json();
-    if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
-    }
-
-    const users = await loadUsers();
-    const idx = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase().trim());
-
-    // Always return success to prevent email enumeration
-    if (idx === -1) {
-      return NextResponse.json({ ok: true });
-    }
-
-    const user = users[idx];
-    const tempPassword = makeTempPassword();
-
-    users[idx].passwordHash = await bcrypt.hash(tempPassword, 10);
-    users[idx].forcePasswordChange = true;
-    users[idx].passwordVersion = (users[idx].passwordVersion ?? 0) + 1;
-    users[idx].updatedAt = new Date().toISOString();
-    await saveUsers(users);
-
-    await sendPasswordResetEmail(
-      user.email,
-      `${user.name} ${user.surname}`.trim(),
-      tempPassword,
-    );
-
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error('[forgot-password] Error:', err);
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
+  const { email } = await req.json().catch(() => ({}));
+  if (typeof email !== 'string' || !email.trim()) {
+    return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   }
+
+  after(async () => {
+    try {
+      const user = (await loadUsers()).find(u => u.email.toLowerCase() === email.toLowerCase().trim());
+      if (!user) return;
+      const token = await createResetToken(user.id);
+      await sendPasswordResetLinkEmail(user.email, `${user.name} ${user.surname}`.trim(), `${HUB_URL}/reset-password?token=${token}`);
+    } catch (err) {
+      console.error('[forgot-password] Error:', err);
+    }
+  });
+
+  return NextResponse.json({ ok: true });
 }

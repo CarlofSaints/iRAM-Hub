@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { loadUsers, HubUser } from '@/lib/userData';
 import { requireLogin } from '@/lib/requireLogin';
 import { createSession, sessionCookie } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
+
+// A real cost-10 hash of a random value, made once per instance: compared against when the email is unknown.
+const DUMMY_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 10);
 
 const profile = (u: HubUser) => ({
   id: u.id,
@@ -24,7 +28,9 @@ export async function POST(req: NextRequest) {
 
   const users = await loadUsers();
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
-  if (!user || !user.passwordHash || !(await bcrypt.compare(password, user.passwordHash))) {
+  // Always run one bcrypt compare, so an unknown email takes as long as a wrong password.
+  const ok = await bcrypt.compare(password, user?.passwordHash || DUMMY_HASH);
+  if (!user || !user.passwordHash || !ok) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
