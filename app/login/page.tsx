@@ -47,12 +47,10 @@ function LoginForm() {
           const res = await authFetch('/api/sso/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ module: moduleSlug }),
+            body: JSON.stringify({ module: moduleSlug, redirect: redirectUrl }),
           });
           if (res.ok) {
-            const { token } = await res.json();
-            const sep = redirectUrl.includes('?') ? '&' : '?';
-            window.location.href = `${redirectUrl}${sep}token=${token}`;
+            window.location.href = (await res.json()).url;
             return;
           }
         } catch { /* fall through to show login form */ }
@@ -69,12 +67,10 @@ function LoginForm() {
       const res = await authFetch('/api/sso/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ module: moduleSlug }),
+        body: JSON.stringify({ module: moduleSlug, redirect: redirectUrl }),
       });
       if (res.ok) {
-        const { token } = await res.json();
-        const sep = redirectUrl.includes('?') ? '&' : '?';
-        window.location.href = `${redirectUrl}${sep}token=${token}`;
+        window.location.href = (await res.json()).url;
         return true;
       }
       const data = await res.json().catch(() => ({ error: 'SSO token failed' }));
@@ -245,7 +241,7 @@ function LoginForm() {
               {forgotSent ? (
                 <>
                   <p className="text-sm text-gray-600">
-                    If an account exists with that email, a temporary password has been sent. Check your inbox and use it to log in.
+                    If an account exists with that email, we&apos;ve sent a link to choose a new password. It works once, for one hour. Your current password still works until you use it.
                   </p>
                   <button
                     onClick={() => { setForgotMode(false); setForgotSent(false); }}
@@ -257,7 +253,7 @@ function LoginForm() {
               ) : (
                 <form onSubmit={handleForgot} className="flex flex-col gap-4">
                   <p className="text-sm text-gray-600">
-                    Enter your email address and we&apos;ll send you a temporary password.
+                    Enter your email address and we&apos;ll send you a link to choose a new password.
                   </p>
                   <input
                     type="email"

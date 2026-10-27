@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { loadUsers, saveUsers } from '@/lib/userData';
+import { makeTempPassword } from '@/lib/session';
 import { requireLogin } from '@/lib/requireLogin';
 import { sendNewUserEmail } from '@/lib/email';
 
@@ -43,9 +44,10 @@ export async function PUT(
   if (body.forcePasswordChange !== undefined) {
     user.forcePasswordChange = !!body.forcePasswordChange;
   }
-  if (body.password !== undefined && body.password.trim().length >= 4) {
+  if (body.password !== undefined && body.password.trim().length >= 8) {
     user.passwordHash = await bcrypt.hash(body.password.trim(), 10);
     user.forcePasswordChange = true;
+    user.passwordVersion = (user.passwordVersion ?? 0) + 1;
   }
 
   user.updatedAt = new Date().toISOString();
@@ -56,14 +58,6 @@ export async function PUT(
   return NextResponse.json(safe);
 }
 
-function generateTempPassword(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-  let pw = '';
-  for (let i = 0; i < 10; i++) {
-    pw += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return pw;
-}
 
 /** POST = send credentials (new temp password + email) */
 export async function POST(
@@ -82,9 +76,10 @@ export async function POST(
   }
 
   const user = users[idx];
-  const tempPassword = generateTempPassword();
+  const tempPassword = makeTempPassword();
   user.passwordHash = await bcrypt.hash(tempPassword, 10);
   user.forcePasswordChange = true;
+  user.passwordVersion = (user.passwordVersion ?? 0) + 1;
   user.updatedAt = new Date().toISOString();
   users[idx] = user;
   await saveUsers(users);

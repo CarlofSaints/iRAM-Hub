@@ -46,6 +46,14 @@ export async function loadModules(): Promise<Module[]> {
 export async function saveModules(modules: Module[]): Promise<void> {
   const json = JSON.stringify(modules, null, 2);
 
+  // Local dev: the local file only (loading reads it too); no Blob token here.
+  if (!process.env.VERCEL) {
+    const localFile = path.join(process.cwd(), 'data', 'modules.json');
+    fs.mkdirSync(path.dirname(localFile), { recursive: true });
+    fs.writeFileSync(localFile, json);
+    return;
+  }
+
   try {
     await put(BLOB_KEY, json, {
       access: 'private',
@@ -58,15 +66,6 @@ export async function saveModules(modules: Module[]): Promise<void> {
     throw new Error(`Failed to persist modules to Vercel Blob: ${msg}`);
   }
 
-  // Local dev: also write to local file
-  try {
-    const localFile = path.join(process.cwd(), 'data', 'modules.json');
-    const dir = path.dirname(localFile);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(localFile, json);
-  } catch {
-    // Vercel read-only FS — expected
-  }
 }
 
 /**

@@ -74,7 +74,8 @@ export function useAuth(requiredRole?: 'super-admin') {
     }
   }, [router, requiredRole]);
 
-  function logout() {
+  async function logout() {
+    await fetch('/api/auth', { method: 'DELETE' }).catch(() => {});
     localStorage.removeItem(SESSION_KEY);
     router.push('/login');
   }
@@ -100,22 +101,9 @@ export function updateSession(patch: Partial<Session>): Session | null {
 }
 
 /**
- * Fetch wrapper that attaches x-user-id from the current session.
+ * Fetch for this Hub's API. Sign-in rides on the httpOnly session cookie, which
+ * the browser sends by itself; the localStorage copy above is for display only.
  */
 export function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
-  let userId = '';
-  if (typeof window !== 'undefined') {
-    try {
-      const raw = localStorage.getItem(SESSION_KEY);
-      if (raw) {
-        const s = JSON.parse(raw) as Partial<Session>;
-        userId = s?.id ?? '';
-      }
-    } catch { /* ignore */ }
-  }
-
-  const headers = new Headers(init.headers);
-  if (userId) headers.set('x-user-id', userId);
-
-  return fetch(input, { ...init, headers });
+  return fetch(input, { credentials: 'same-origin', ...init });
 }

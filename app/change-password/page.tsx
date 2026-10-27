@@ -31,8 +31,8 @@ export default function ChangePasswordPage() {
     e.preventDefault();
     setError('');
 
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -106,7 +106,7 @@ export default function ChangePasswordPage() {
                 autoFocus
                 minLength={6}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm pr-14 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-                placeholder="At least 6 characters"
+                placeholder="At least 8 characters"
               />
               <button
                 type="button"

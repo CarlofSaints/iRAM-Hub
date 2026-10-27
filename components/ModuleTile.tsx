@@ -36,9 +36,8 @@ export default function ModuleTile({ module, hasAccess }: Props) {
         window.open(module.url, '_blank');
         return;
       }
-      const { token } = await res.json();
-      const sep = module.url.includes('?') ? '&' : '?';
-      window.open(`${module.url}/sso/callback${sep}token=${token}`, '_blank');
+      const { url } = await res.json();
+      window.open(url, '_blank');
     } catch {
       // Fallback: open without token
       window.open(module.url, '_blank');
