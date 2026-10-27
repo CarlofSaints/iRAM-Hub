@@ -12,6 +12,9 @@ const MAX_AGE = 60 * 60 * 24 * 14; // 14 days
 function secret(): string {
   const s = process.env.IRAM_HUB_SESSION_SECRET;
   if (s) return s;
+  // No separate setting needed: derive the key from the SSO secret that is already set.
+  const sso = process.env.IRAM_SSO_SECRET;
+  if (sso) return `hub-session:${sso}`;
   if (process.env.VERCEL) throw new Error('IRAM_HUB_SESSION_SECRET is not set');
   return 'local-dev-only-secret';
 }

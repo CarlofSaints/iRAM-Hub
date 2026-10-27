@@ -11,11 +11,17 @@ import { loadModules } from '@/lib/moduleData';
  */
 /**
  * Other domains a module is legitimately served from, as JSON in SSO_EXTRA_ORIGINS,
- * e.g. {"iram-live":["https://aria-live-phi.vercel.app"]}. Bad JSON = none.
+ * e.g. {"iram-live":["https://aria-live-phi.vercel.app"]}. Unset = the defaults below; bad JSON = none.
  */
+const DEFAULT_EXTRA_ORIGINS: Record<string, string[]> = {
+  'iram-live': ['https://aria-live-phi.vercel.app'],
+};
+
 function extraOrigins(slug: string): string[] {
   try {
-    const map = JSON.parse(process.env.SSO_EXTRA_ORIGINS || '{}') as Record<string, string[]>;
+    const map = process.env.SSO_EXTRA_ORIGINS
+      ? (JSON.parse(process.env.SSO_EXTRA_ORIGINS) as Record<string, string[]>)
+      : DEFAULT_EXTRA_ORIGINS;
     return (map[slug] ?? []).map(u => new URL(u).origin);
   } catch {
     return [];
